@@ -12,7 +12,29 @@ const SIDE = 6
 const SYMBOLS = '😀🎉💖🎩🐶🐱🦄🐬🌍🌛🌞💫🍎🍌🍓🍐🍟🍿'
 
 class App extends Component {
-    cards = this.generateCards()
+    state = {
+        cards: this.generateCards(),
+        currentPair: [],
+        guesses: 0,
+        matchedCardIndices: [],
+    }
+
+    //cards = this.generateCards()
+
+    getFeedbackForCard(index) {
+        const { currentPair, matchedCardIndices } = this.state
+        const indexMatched = matchedCardIndices.includes(index)
+
+        if (currentPair.length < 2) {
+            return indexMatched || index === currentPair[0] ? 'visible' : 'hidden'
+        }
+
+        if (currentPair.includes(index)) {
+            return indexMatched ? 'justMatched' : 'justMismatched'
+        }
+
+        return indexMatched ? 'visible' : 'hidden'
+    }
 
     generateCards() {
         const result = []
@@ -26,19 +48,32 @@ class App extends Component {
     }
 
     // Arrow fx for binding
-    handleCardClick = (card) => {
-        console.log(card, this)
+    handleCardClick = index => {
+        const { currentPair } = this.state
+
+        if (currentPair.length === 2) {
+            return
+        }
+
+        if (currentPair.length === 0) {
+            this.setState({ currentPair: [index] })
+            return
+        }
+
+        this.handleNewPairClosedBy(index)
     }
 
     render() {
-        const won = new Date().getSeconds() % 2 === 0
+        const { cards, guesses, matchedCardIndices } = this.state
+        const won = matchedCardIndices.length === cards.length
         return (
             <div className="memory">
-                <GuessCount guesses={0} />
-                {this.cards.map((card, index) => (
+                <GuessCount guesses={guesses} />
+                {cards.map((card, index) => (
                     <Card
                         card={card}
-                        feedback="visible"
+                        feedback={this.getFeedbackForCard(index)}
+                        index={index}
                         key={index}
                         onClick={this.handleCardClick}
                     />
